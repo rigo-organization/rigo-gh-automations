@@ -1,0 +1,51 @@
+name: PR Validation
+
+on:
+  workflow_call:
+    inputs:
+      prefix:
+        description: 'Repository issue prefix, e.g. DPC-BE'
+        required: true
+        type: string
+
+permissions:
+  pull-requests: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate PR metadata
+        uses: actions/github-script@v7
+        env:
+          ISSUE_PREFIX: ${{ inputs.prefix }}
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            if (!pr) {
+              core.setFailed('This workflow must be called from a pull_request event.');
+              return;
+            }
+            const prefix = process.env.ISSUE_PREFIX;
+            if (!/^[A-Z][A-Z0-9-]{1,19}$/.test(prefix)) {
+              core.setFailed('Invalid prefix.');
+              return;
+            }
+            const escapeRegex = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const p = escapeRegex(prefix);
+            const branch = pr.head.ref;
+            const branchPattern = new RegExp(`^(feature|fix|hotfix|chore)/${p}-\\d+(?:-[a-z0-9-]+)?$`);
+            const titlePattern = new RegExp(`^\\[${p}-\\d+\\]\\s+\\S`);
+            const problems = [];
+            if (!branchPattern.test(branch)) {
+              problems.push(`Branch '${branch}' must follow feature/${prefix}-123-description (or fix/hotfix/chore).`);
+            }
+            if (!titlePattern.test(pr.title)) {
+              problems.push(`PR title must begin with [${prefix}-123] `);
+            }
+            const referencePattern = new RegExp(`(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?)\\s+(?:[\\w.-]+/[\\w.-]+)?#\\d+`, 'i');
+            if (!referencePattern.test(pr.body || '')) {
+              problems.push('PR body must contain a closing reference such as Closes #123.');
+            }
+            if (problems.length) core.setFailed(problems.join('\n'));
+            else core.info('PR metadata validation passed.');

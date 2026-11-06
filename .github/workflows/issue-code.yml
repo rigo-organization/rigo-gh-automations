@@ -1,0 +1,42 @@
+name: Issue Code
+
+on:
+  workflow_call:
+    inputs:
+      prefix:
+        description: 'Unique repository prefix, e.g. DPC-BE'
+        required: true
+        type: string
+
+permissions:
+  issues: write
+
+jobs:
+  assign-code:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Prefix issue title
+        uses: actions/github-script@v7
+        env:
+          ISSUE_PREFIX: ${{ inputs.prefix }}
+        with:
+          script: |
+            const issue = context.payload.issue;
+            const prefix = process.env.ISSUE_PREFIX;
+            if (!issue || context.eventName !== 'issues') {
+              core.setFailed('This workflow must be called from an issues event.');
+              return;
+            }
+            if (!/^[A-Z][A-Z0-9-]{1,19}$/.test(prefix)) {
+              core.setFailed('Invalid prefix. Use 2-20 uppercase letters, numbers or hyphens.');
+              return;
+            }
+            const code = `${prefix}-${issue.number}`;
+            const cleanTitle = issue.title.replace(/^\[[A-Z][A-Z0-9-]*-\d+\]\s*/, '').trim();
+            const newTitle = `[${code}] ${cleanTitle}`;
+            if (issue.title === newTitle) return;
+            await github.rest.issues.update({
+              ...context.repo,
+              issue_number: issue.number,
+              title: newTitle
+            });
