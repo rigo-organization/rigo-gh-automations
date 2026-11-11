@@ -31,9 +31,9 @@ jobs:
               core.setFailed('Invalid prefix.');
               return;
             }
-            const titlePattern = new RegExp(`^\\[${prefix}-\\d+\\]\\s+\\S`);
+            const titlePattern = new RegExp(`^\\s*[\\[(]?\\s*${prefix}-\\d+\\b`, 'i');
             if (!titlePattern.test(pr.title || '')) {
-              core.setFailed(`PR title must begin with [${prefix}-123] followed by a description.`);
+              core.setFailed(`PR title must begin with ${prefix}-123, [${prefix}-123], or (${prefix}-123).`);
               return;
             }
             core.info('PR title validation passed.');

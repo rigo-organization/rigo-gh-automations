@@ -5,7 +5,7 @@ Reusable GitHub Actions workflows for RIGO projects.
 ## Available workflows
 
 - `issue-code.yml`: prefixes issue titles with `[PREFIX-NUMBER]`.
-- `pr-validation.yml`: validates only the PR title, for example `[DPC-BE-12] Add customer registration`.
+- `pr-validation.yml`: validates only that the PR title starts with the issue code, with or without brackets or parentheses, for example `DPC-BE-12 Add customer registration`, `[DPC-BE-12] Add customer registration`, or `(DPC-BE-12) Add customer registration`.
 - `release.yml`: publishes a GitHub Release with auto-generated notes for an existing pushed tag.
 
 ## Setup
@@ -22,7 +22,7 @@ Reusable GitHub Actions workflows for RIGO projects.
 
 - Issue `#12` in despachao-backend becomes `[DPC-BE-12] ...`.
 - Branch `feature/DPC-BE-12-add-customer`.
-- PR title `[DPC-BE-12] Add customer registration`.
+- PR titles `DPC-BE-12 Add customer registration`, `[DPC-BE-12] Add customer registration`, or `(DPC-BE-12) Add customer registration`.
 - PR body and closing references such as `Closes #12` are optional. Branch naming is not validated, including promotions from `develop` to `qa`.
 - `git tag v1.0.0 && git push origin v1.0.0` creates a GitHub Release for that tag.
 
